@@ -7,7 +7,7 @@ var connMongoDB = function() {
         'got', // nome do banco
         new mongo.Server(
             '192.168.99.100', // string contendo o endereço do servidor 'localhost'
-            7755, // porta de conexão '27017'
+            7757, // porta de conexão '27017'
             {}
         ), {}
     );
