@@ -1,3 +1,5 @@
+var ObjectID = require('mongodb').ObjectId;
+
 function jogoDAO(connection) {
     this._connection = connection();
 }
@@ -56,19 +58,63 @@ jogoDAO.prototype.acao = function(acao) {
 
             acao.acao_termina_em = date.getTime() + tempo;
             collection.insert(acao);
+        });
+
+        mongoclient.collection("jogo", function(err, collection) {
+            var moedas = null;
+
+            switch (parseInt(acao.acao)) {
+                case 1:
+                    moedas = -2 * acao.quantidade;
+                    break;
+                case 2:
+                    moedas = -3 * acao.quantidade;
+                    break;
+                case 3:
+                    moedas = -1 * acao.quantidade;
+                    break;
+                case 4:
+                    moedas = -1 * acao.quantidade;
+                    break;
+
+            }
+
+            collection.update({ usuario: acao.usuario }, { $inc: { moeda: moedas } });
 
             mongoclient.close();
+
         });
+
     });
 }
 
 jogoDAO.prototype.getAcoes = function(res, usuario) {
     this._connection.open(function(err, mongoclient) {
         mongoclient.collection("acao", function(err, collection) {
-            collection.find({ usuario: usuario }).toArray(function(err, result) {
+
+            var date = new Date();
+            var momento_atual = date.getTime();
+
+            collection.find({ usuario: usuario, acao_termina_em: { $gt: momento_atual } }).toArray(function(err, result) {
                 res.render("pergaminhos", { acoes: result });
                 mongoclient.close();
             });
+        });
+    });
+}
+
+jogoDAO.prototype.revogarAcao = function(_id, res) {
+    this._connection.open(function(err, mongoclient) {
+        mongoclient.collection("acao", function(err, collection) {
+
+            collection.remove({
+                    _id: ObjectID(_id)
+                },
+                function(err, result) {
+                    res.redirect("jogo?msg=D");
+                    mongoclient.close();
+                }
+            );
         });
     });
 }
